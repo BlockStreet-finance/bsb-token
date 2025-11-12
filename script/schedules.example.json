@@ -1,0 +1,41 @@
+{
+  "comment": "示例配置文件 - 复制为 schedules.json 并修改地址和数量",
+  "schedules": [
+    {
+      "name": "Team Member 1",
+      "beneficiary": "0x1111111111111111111111111111111111111111",
+      "cliffDays": 0,
+      "numberOfPeriods": 12,
+      "amountPerPeriod": "1000",
+      "note": "No cliff, 12 months vesting, 1000 tokens per month"
+    },
+    {
+      "name": "Team Member 2",
+      "beneficiary": "0x2222222222222222222222222222222222222222",
+      "cliffDays": 90,
+      "numberOfPeriods": 24,
+      "amountPerPeriod": "500",
+      "note": "90 days cliff, 24 months vesting, 500 tokens per month"
+    },
+    {
+      "name": "Advisor",
+      "beneficiary": "0x3333333333333333333333333333333333333333",
+      "cliffDays": 180,
+      "numberOfPeriods": 36,
+      "amountPerPeriod": "250",
+      "note": "180 days cliff, 36 months vesting, 250 tokens per month"
+    },
+    {
+      "name": "Investor",
+      "beneficiary": "0x4444444444444444444444444444444444444444",
+      "cliffDays": 365,
+      "numberOfPeriods": 48,
+      "amountPerPeriod": "2000",
+      "note": "1 year cliff, 48 months vesting, 2000 tokens per month"
+    }
+  ],
+  "summary": {
+    "totalSchedules": 4,
+    "totalAllocation": "Total = (12*1000) + (24*500) + (36*250) + (48*2000) = 12000 + 12000 + 9000 + 96000 = 129000 tokens"
+  }
+}
