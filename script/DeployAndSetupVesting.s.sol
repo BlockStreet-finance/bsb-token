@@ -116,28 +116,76 @@ contract DeployAndSetupVesting is Script {
         // Example schedules - EDIT THIS SECTION
         ScheduleConfig[] memory schedules = new ScheduleConfig[](3);
 
-        // Schedule 1: No cliff, 12 periods, 1000 tokens per period
+        // Schedule 1: BS-Community Airdrop
         schedules[0] = ScheduleConfig({
-            beneficiary: 0x1111111111111111111111111111111111111111,
+            beneficiary: 0x324F7049c098D682f644903eb9bcfd9b20937426,
             cliffDuration: 0,           // 0 days cliff
-            numberOfPeriods: 12,        // 12 periods (12 months)
-            amountPerPeriod: 1000 * 1e18  // 1000 tokens per period
+            numberOfPeriods: 3,        // 12 periods (12 months)
+            amountPerPeriod: 8333333 * 1e18  // 8333333 tokens per period
         });
 
-        // Schedule 2: 90-day cliff, 24 periods, 500 tokens per period
+        // Schedule 2: BS-Ecosystem Airdrop
         schedules[1] = ScheduleConfig({
-            beneficiary: 0x2222222222222222222222222222222222222222,
-            cliffDuration: 90,          // 90 days cliff
-            numberOfPeriods: 24,        // 24 periods (24 months)
-            amountPerPeriod: 500 * 1e18   // 500 tokens per period
+            beneficiary: 0x3E038AA6E022d90e75f8C4f0251513E37B772B4C,
+            cliffDuration: 0,          // 0 days cliff
+            numberOfPeriods: 3,        // 3 periods (3 months)
+            amountPerPeriod: 10000000 * 1e18   // 10000000 tokens per period
         });
 
-        // Schedule 3: 180-day cliff, 36 periods, 250 tokens per period
+        // Schedule 3: BS-Community & User Incentives
         schedules[2] = ScheduleConfig({
-            beneficiary: 0x3333333333333333333333333333333333333333,
-            cliffDuration: 180,         // 180 days cliff
+            beneficiary: 0x1Fe4574B84362fb3a00Ea3c4E18F58Da513C427e,
+            cliffDuration: 30*5,         // 150 days cliff
+            numberOfPeriods: 60,        // 60 periods (60 months)
+            amountPerPeriod: 4150000 * 1e18   // 4150000 tokens per period
+        });
+
+        // Schedule 4: BS-Ecosystem Partners
+        schedules[3] = ScheduleConfig({
+            beneficiary: 0x3119DBF448F8e8AD6d5a2996316816AE36386Ef3,
+            cliffDuration: 30*5,         // 150 days cliff
+            numberOfPeriods: 60,        // 60 periods (36 months)
+            amountPerPeriod: 3775000 * 1e18   // 3775000 tokens per period
+        });
+
+        // Schedule 5: BS-Treasury
+        schedules[4] = ScheduleConfig({
+            beneficiary: 0x816264560049544913998877E5E1B1e5058e028a,
+            cliffDuration: 30*5,         // 150 days cliff
+            numberOfPeriods: 60,        // 60 periods (60 months)
+            amountPerPeriod: 941667 * 1e18   // 941667 tokens per period
+        });
+
+        // Schedule 6: BS-Team & Advisors
+        schedules[5] = ScheduleConfig({
+            beneficiary: 0xd399adca52C8Ae65ea3E063b5F771523522C4AC7,
+            cliffDuration: 30*12,         // 360 days cliff
+            numberOfPeriods: 48,         // 48 periods (36 months)
+            amountPerPeriod: 3604167 * 1e18   // 3604167 tokens per period
+        });
+
+        // Schedule 7: BS-Core Investors
+        schedules[6] = ScheduleConfig({
+            beneficiary: 0xB399C3D339ac7255F2af68558f4B8B25C73FD648,
+            cliffDuration: 30*12,         // 360 days cliff
             numberOfPeriods: 36,        // 36 periods (36 months)
-            amountPerPeriod: 250 * 1e18   // 250 tokens per period
+            amountPerPeriod: 4361111 * 1e18   // 4361111 tokens per period
+        });
+
+        // Schedule 8: BS-Strategic investors
+        schedules[7] = ScheduleConfig({
+            beneficiary: 0xa892Ec8068FEffc79532724F22A4f3FF1FB30e0D,
+            cliffDuration: 30*12,         // 360 days cliff
+            numberOfPeriods: 36,        // 36 periods (36 months)
+            amountPerPeriod: 833333 * 1e18   // 833333 tokens per period
+        });
+
+        // Schedule 9: BS-liquidity & lisintg
+        schedules[8] = ScheduleConfig({
+            beneficiary: 0xad3C3Ce07a03E3cE19218299dDD37aC0e11D1dbd,
+            cliffDuration: 0,         // 0 days cliff
+            numberOfPeriods: 1,        // 0 periods (36 months)
+            amountPerPeriod: 53000000 * 1e18   // 53000000 tokens per period
         });
 
         return schedules;
