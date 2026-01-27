@@ -226,7 +226,7 @@ contract BSTTokenMultiVesting is Ownable, ReentrancyGuard {
      * @param _startTime The vesting start timestamp
      */
     function setStartTime(uint256 _startTime) external onlyOwner whenNotStarted {
-        require(_startTime > 0, "Invalid start time");
+        require(_startTime > block.timestamp, "Invalid start time");
         startTime = _startTime;
         emit StartTimeSet(_startTime);
     }
@@ -709,7 +709,7 @@ contract BSTTokenMultiVesting is Ownable, ReentrancyGuard {
                 }
 
                 uint256 timeAfterCliff = timestamp - cliffEnd;
-                uint256 periodsCompleted = timeAfterCliff / PERIOD_DURATION;
+                uint256 periodsCompleted = (timeAfterCliff / PERIOD_DURATION) + 1;
 
                 if (periodsCompleted >= schedule.numberOfPeriods) {
                     projectedVested += schedule.totalAmount;
@@ -752,7 +752,7 @@ contract BSTTokenMultiVesting is Ownable, ReentrancyGuard {
             }
 
             uint256 timeAfterCliff = timestamp - cliffEnd;
-            uint256 periodsCompleted = timeAfterCliff / PERIOD_DURATION;
+            uint256 periodsCompleted = (timeAfterCliff / PERIOD_DURATION) + 1;
             uint256 vested;
 
             if (periodsCompleted >= schedule.numberOfPeriods) {
