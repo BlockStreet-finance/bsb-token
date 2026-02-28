@@ -84,6 +84,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     function mint(uint8 _phase, uint256 _deadline, bytes calldata _sig) external nonReentrant {
         if (phase == Phase.PAUSED) revert MintPaused();
         if (block.timestamp > _deadline) revert SignatureExpired();
+        if (_deadline > block.timestamp + 5 minutes) revert SignatureExpired();
         if (uint8(phase) != _phase) revert WrongPhase();
         if (hasMinted[msg.sender]) revert AlreadyMinted();
 

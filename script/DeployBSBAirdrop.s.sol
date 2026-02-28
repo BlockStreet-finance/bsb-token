@@ -7,12 +7,10 @@ import "../src/BSBAirdrop.sol";
 /**
  * @dev Deploy BSBAirdrop contract.
  *
- * Required env vars:
- *   BST_TOKEN_ADDRESS  - BSB ERC20 token address
- *   BLOCK_PASS_ADDRESS - BlockPass NFT address
- *
  * Usage:
- *   forge script script/DeployBSBAirdrop.s.sol --broadcast --rpc-url $RPC_URL --account iost
+ *   forge script script/DeployBSBAirdrop.s.sol \
+ *     --sig "run(address,address)" <BSB_TOKEN> <BLOCK_PASS_NFT> \
+ *     --broadcast --rpc-url $RPC_URL --account iost
  */
 contract DeployBSBAirdrop is Script {
     // ──────────── Airdrop Parameters (edit before deploy) ────────────
@@ -22,9 +20,7 @@ contract DeployBSBAirdrop is Script {
     uint256 constant VESTING_PERIODS  = 24;                // 12 months after cliff
     // ─────────────────────────────────────────────────────────────────
 
-    function run() external {
-        address tokenAddr = vm.envAddress("BST_TOKEN_ADDRESS");
-        address nftAddr = vm.envAddress("BLOCK_PASS_ADDRESS");
+    function run(address tokenAddr, address nftAddr) external {
 
         console.log("Deploying BSBAirdrop...");
         console.log("  Token:", tokenAddr);
@@ -51,9 +47,6 @@ contract DeployBSBAirdrop is Script {
         console.log("BSBAirdrop deployed at:", address(airdrop));
         console.log("  Locked amount per NFT:", airdrop.lockedAmount());
 
-        string memory deploymentInfo = string.concat(
-            "BSB_AIRDROP_ADDRESS=", vm.toString(address(airdrop))
-        );
-        vm.writeFile("deployments/bsb-airdrop.env", deploymentInfo);
+        console.log("BSB_AIRDROP_ADDRESS=", address(airdrop));
     }
 }

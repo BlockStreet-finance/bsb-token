@@ -42,13 +42,5 @@ contract DeployBSTTokenMultiVesting is Script {
         console.log("Owner:", vesting.owner());
         console.log("");
 
-        // Save to file
-        string memory info = string.concat(
-            "BST_TOKEN_ADDRESS=", vm.toString(tokenAddress), "\n",
-            "VESTING_CONTRACT=", vm.toString(address(vesting)), "\n"
-        );
-
-        vm.writeFile("deployments/multi-vesting.env", info);
-        console.log("Saved to: deployments/multi-vesting.env");
     }
 }

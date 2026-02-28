@@ -91,15 +91,6 @@ contract DeployAndSetupVesting is Script {
         console.log("Then call startVesting() to begin vesting");
         console.log("");
 
-        // Save to file
-        string memory info = string.concat(
-            "BST_TOKEN_ADDRESS=", vm.toString(tokenAddress), "\n",
-            "VESTING_CONTRACT=", vm.toString(address(vesting)), "\n",
-            "TOTAL_ALLOCATED=", vm.toString(totalAllocation), "\n"
-        );
-
-        vm.writeFile("deployments/vesting-setup.env", info);
-        console.log("Saved to: deployments/vesting-setup.env");
     }
 
     /**

@@ -9,21 +9,15 @@ import "../src/BlockPassMinter.sol";
  * @title Deploy BlockPass + BlockPassMinter
  * @dev Deploys both contracts and wires them together.
  *
- *   1. Set .env file:
- *      PASS_SIGNER=0x...        (server signing wallet address)
- *      USDT_ADDRESS=0x...       (USDT contract address)
- *      TREASURY_ADDRESS=0x...   (receives mint payments)
- *
- *   2. Run:
- *      forge script script/DeployBlockPass.s.sol --rpc-url $RPC_URL --broadcast --account iost
+ * Usage:
+ *   forge script script/DeployBlockPass.s.sol \
+ *     --sig "run(address,address,address)" <SIGNER> <USDT> <TREASURY> \
+ *     --rpc-url $RPC_URL --broadcast --account iost
  */
 contract DeployBlockPass is Script {
     string constant BASE_TOKEN_URI = "ipfs://QmYzbqtzvufCqBneBbAt1b5r9h4qeuy8R8cSEtoJ2X4HY2/";
 
-    function run() external {
-        address signerAddr = vm.envAddress("PASS_SIGNER");
-        address usdtAddr = vm.envAddress("USDT_ADDRESS");
-        address treasuryAddr = vm.envAddress("TREASURY_ADDRESS");
+    function run(address signerAddr, address usdtAddr, address treasuryAddr) external {
         string memory baseURI = BASE_TOKEN_URI;
 
         console.log("=== Deploying BlockPass + Minter ===");
@@ -57,15 +51,5 @@ contract DeployBlockPass is Script {
         console.log("Phase: PAUSED (call minter.setPhase to start)");
         console.log("");
 
-        string memory info = string.concat(
-            "BLOCK_PASS_NFT=", vm.toString(address(nft)), "\n",
-            "BLOCK_PASS_MINTER=", vm.toString(address(minter)), "\n",
-            "SIGNER=", vm.toString(signerAddr), "\n",
-            "USDT=", vm.toString(usdtAddr), "\n",
-            "TREASURY=", vm.toString(treasuryAddr), "\n"
-        );
-
-        vm.writeFile("deployments/block-pass.env", info);
-        console.log("Saved to: deployments/block-pass.env");
     }
 }

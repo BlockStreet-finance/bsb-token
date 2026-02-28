@@ -161,7 +161,7 @@ contract BlockPassMinterTest is Test {
         usdt.approve(address(minter), type(uint256).max);
     }
 
-    uint256 public constant DEFAULT_DEADLINE = 1 hours;
+    uint256 public constant DEFAULT_DEADLINE = 3 minutes;
 
     // ─── Helpers ──────────────────────────────────────
     function _deadline() internal view returns (uint256) {
@@ -273,10 +273,21 @@ contract BlockPassMinterTest is Test {
     // ─── Mint: expired signature ──────────────────────
     function test_mint_revert_expired() public {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 3 minutes;
         bytes memory sig = _sign(user1, 1, deadline);
 
         vm.warp(deadline + 1);
+        vm.prank(user1);
+        vm.expectRevert(BlockPassMinter.SignatureExpired.selector);
+        minter.mint(1, deadline, sig);
+    }
+
+    // ─── Mint: deadline too far in the future ────────
+    function test_mint_revert_deadline_too_far() public {
+        minter.setPhase(BlockPassMinter.Phase.PHASE1);
+        uint256 deadline = block.timestamp + 6 minutes;
+        bytes memory sig = _sign(user1, 1, deadline);
+
         vm.prank(user1);
         vm.expectRevert(BlockPassMinter.SignatureExpired.selector);
         minter.mint(1, deadline, sig);
