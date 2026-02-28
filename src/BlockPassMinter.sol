@@ -45,6 +45,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     error ZeroAddress();
     error WrongPhase();
     error PhaseSupplyReached();
+    error Phase1NotComplete();
 
     // ──────────────────── Events ───────────────────────
     event PhaseChanged(Phase newPhase);
@@ -114,6 +115,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
 
     // ──────────────────── Admin ───────────────────────
     function setPhase(Phase _phase) external onlyOwner {
+        if (_phase == Phase.PHASE2 && phase1Minted < PHASE1_SUPPLY) revert Phase1NotComplete();
         phase = _phase;
         emit PhaseChanged(_phase);
     }

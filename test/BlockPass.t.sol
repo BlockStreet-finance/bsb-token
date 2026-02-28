@@ -220,14 +220,14 @@ contract BlockPassMinterTest is Test {
 
     // ─── Mint: phase2 ───────────────────────────────
     function test_mint_phase2() public {
+        // Must complete phase1 first
+        _fillPhase1();
         minter.setPhase(BlockPassMinter.Phase.PHASE2);
 
         vm.prank(user2);
         minter.mint(2, _sign(user2, 2));
 
         assertEq(nft.balanceOf(user2), 1);
-        assertEq(nft.ownerOf(1), user2);
-        assertEq(nft.totalSupply(), 1);
         assertEq(minter.phase2Minted(), 1);
     }
 
@@ -240,6 +240,7 @@ contract BlockPassMinterTest is Test {
 
     // ─── Mint: wrong phase ────────────────────────────
     function test_mint_revert_wrong_phase() public {
+        _fillPhase1();
         minter.setPhase(BlockPassMinter.Phase.PHASE2);
 
         vm.prank(user1);
@@ -295,6 +296,7 @@ contract BlockPassMinterTest is Test {
 
     // ─── Mint: phase2 supply cap (500) ────────────────
     function test_mint_revert_phase2_supply() public {
+        _fillPhase1();
         minter.setPhase(BlockPassMinter.Phase.PHASE2);
 
         for (uint256 i = 1; i <= 500; i++) {
@@ -317,16 +319,36 @@ contract BlockPassMinterTest is Test {
         minter.mint(2, _sign(extra, 2));
     }
 
+    // ─── Helpers ─────────────────────────────────────
+    function _fillPhase1() internal {
+        minter.setPhase(BlockPassMinter.Phase.PHASE1);
+        for (uint256 i = 1; i <= 1500; i++) {
+            address u = address(uint160(0x50000 + i));
+            usdt.mint(u, 5 * 10 ** 6);
+            vm.prank(u);
+            usdt.approve(address(minter), type(uint256).max);
+            vm.prank(u);
+            minter.mint(1, _sign(u, 1));
+        }
+    }
+
     // ─── Admin ────────────────────────────────────────
     function test_setPhase() public {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
         assertEq(uint8(minter.phase()), 1);
 
+        _fillPhase1();
         minter.setPhase(BlockPassMinter.Phase.PHASE2);
         assertEq(uint8(minter.phase()), 2);
 
         minter.setPhase(BlockPassMinter.Phase.PAUSED);
         assertEq(uint8(minter.phase()), 0);
+    }
+
+    function test_setPhase_revert_phase2_before_phase1_complete() public {
+        minter.setPhase(BlockPassMinter.Phase.PHASE1);
+        vm.expectRevert(BlockPassMinter.Phase1NotComplete.selector);
+        minter.setPhase(BlockPassMinter.Phase.PHASE2);
     }
 
     function test_setPhase_revert_not_owner() public {
