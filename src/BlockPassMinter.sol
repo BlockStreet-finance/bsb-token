@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,7 +14,7 @@ import "./BlockPass.sol";
  * @dev Handles mint logic: signature verification, USDT payment, phase control.
  *      Calls BlockPass.mint() to issue tokens.
  */
-contract BlockPassMinter is Ownable {
+contract BlockPassMinter is Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
     using SafeERC20 for IERC20;
@@ -77,7 +78,7 @@ contract BlockPassMinter is Ownable {
      * @dev User must approve this contract for MINT_PRICE of USDT before calling.
      *      Signature: keccak256(abi.encodePacked(minter, _phase, chainid, address(this)))
      */
-    function mint(uint8 _phase, bytes calldata _sig) external {
+    function mint(uint8 _phase, bytes calldata _sig) external nonReentrant {
         if (phase == Phase.PAUSED) revert MintPaused();
         if (uint8(phase) != _phase) revert WrongPhase();
         if (hasMinted[msg.sender]) revert AlreadyMinted();
@@ -96,18 +97,16 @@ contract BlockPassMinter is Ownable {
         bytes32 ethSignedHash = msgHash.toEthSignedMessageHash();
         if (ethSignedHash.recover(_sig) != signer) revert InvalidSignature();
 
-        // Collect payment
-        usdt.safeTransferFrom(msg.sender, treasury, MINT_PRICE);
-
-        // Update phase counter
+        // Effects: update state before external calls (CEI pattern)
+        hasMinted[msg.sender] = true;
         if (phase == Phase.PHASE1) {
             phase1Minted++;
         } else {
             phase2Minted++;
         }
 
-        // Mint via NFT contract
-        hasMinted[msg.sender] = true;
+        // Interactions: external calls last
+        usdt.safeTransferFrom(msg.sender, treasury, MINT_PRICE);
         uint256 tokenId = nft.mint(msg.sender);
 
         emit Minted(msg.sender, tokenId);

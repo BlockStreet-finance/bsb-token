@@ -15,19 +15,20 @@ import "../src/BlockPassMinter.sol";
  *      PASS_SIGNER=0x...        (server signing wallet address)
  *      USDT_ADDRESS=0x...       (USDT contract address)
  *      TREASURY_ADDRESS=0x...   (receives mint payments)
- *      BASE_TOKEN_URI=https://... (metadata base URI)
  *
  *   2. Run:
  *      forge script script/DeployBlockPass.s.sol --rpc-url $RPC_URL --broadcast
  */
 contract DeployBlockPass is Script {
+    string constant BASE_TOKEN_URI = "ipfs://QmYzbqtzvufCqBneBbAt1b5r9h4qeuy8R8cSEtoJ2X4HY2/";
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
         address signerAddr = vm.envAddress("PASS_SIGNER");
         address usdtAddr = vm.envAddress("USDT_ADDRESS");
         address treasuryAddr = vm.envAddress("TREASURY_ADDRESS");
-        string memory baseURI = vm.envString("BASE_TOKEN_URI");
+        string memory baseURI = BASE_TOKEN_URI;
 
         console.log("=== Deploying BlockPass + Minter ===");
         console.log("Deployer:", deployer);
