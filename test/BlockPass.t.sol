@@ -161,14 +161,24 @@ contract BlockPassMinterTest is Test {
         usdt.approve(address(minter), type(uint256).max);
     }
 
+    uint256 public constant DEFAULT_DEADLINE = 1 hours;
+
     // ─── Helpers ──────────────────────────────────────
-    function _sign(address _minter, uint8 phase) internal view returns (bytes memory) {
+    function _deadline() internal view returns (uint256) {
+        return block.timestamp + DEFAULT_DEADLINE;
+    }
+
+    function _sign(address _minter, uint8 phase, uint256 deadline) internal view returns (bytes memory) {
         bytes32 msgHash = keccak256(
-            abi.encodePacked(_minter, phase, block.chainid, address(minter))
+            abi.encodePacked(_minter, phase, deadline, block.chainid, address(minter))
         );
         bytes32 ethHash = MessageHashUtils.toEthSignedMessageHash(msgHash);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethHash);
         return abi.encodePacked(r, s, v);
+    }
+
+    function _sign(address _minter, uint8 phase) internal view returns (bytes memory) {
+        return _sign(_minter, phase, _deadline());
     }
 
     // ─── Constructor ──────────────────────────────────
@@ -208,7 +218,7 @@ contract BlockPassMinterTest is Test {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
 
         vm.prank(user1);
-        minter.mint(1, _sign(user1, 1));
+        minter.mint(1, _deadline(), _sign(user1, 1));
 
         assertEq(nft.balanceOf(user1), 1);
         assertEq(nft.ownerOf(1), user1);
@@ -225,7 +235,7 @@ contract BlockPassMinterTest is Test {
         minter.setPhase(BlockPassMinter.Phase.PHASE2);
 
         vm.prank(user2);
-        minter.mint(2, _sign(user2, 2));
+        minter.mint(2, _deadline(), _sign(user2, 2));
 
         assertEq(nft.balanceOf(user2), 1);
         assertEq(minter.phase2Minted(), 1);
@@ -235,7 +245,7 @@ contract BlockPassMinterTest is Test {
     function test_mint_revert_paused() public {
         vm.prank(user1);
         vm.expectRevert(BlockPassMinter.MintPaused.selector);
-        minter.mint(1, _sign(user1, 1));
+        minter.mint(1, _deadline(), _sign(user1, 1));
     }
 
     // ─── Mint: wrong phase ────────────────────────────
@@ -245,7 +255,7 @@ contract BlockPassMinterTest is Test {
 
         vm.prank(user1);
         vm.expectRevert(BlockPassMinter.WrongPhase.selector);
-        minter.mint(1, _sign(user1, 1)); // signed for phase1
+        minter.mint(1, _deadline(), _sign(user1, 1)); // signed for phase1
     }
 
     // ─── Mint: already minted ─────────────────────────
@@ -253,11 +263,23 @@ contract BlockPassMinterTest is Test {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
 
         vm.prank(user1);
-        minter.mint(1, _sign(user1, 1));
+        minter.mint(1, _deadline(), _sign(user1, 1));
 
         vm.prank(user1);
         vm.expectRevert(BlockPassMinter.AlreadyMinted.selector);
-        minter.mint(1, _sign(user1, 1));
+        minter.mint(1, _deadline(), _sign(user1, 1));
+    }
+
+    // ─── Mint: expired signature ──────────────────────
+    function test_mint_revert_expired() public {
+        minter.setPhase(BlockPassMinter.Phase.PHASE1);
+        uint256 deadline = block.timestamp + 1 hours;
+        bytes memory sig = _sign(user1, 1, deadline);
+
+        vm.warp(deadline + 1);
+        vm.prank(user1);
+        vm.expectRevert(BlockPassMinter.SignatureExpired.selector);
+        minter.mint(1, deadline, sig);
     }
 
     // ─── Mint: invalid signature ──────────────────────
@@ -267,7 +289,7 @@ contract BlockPassMinterTest is Test {
 
         vm.prank(user2); // wrong sender
         vm.expectRevert(BlockPassMinter.InvalidSignature.selector);
-        minter.mint(1, sig);
+        minter.mint(1, _deadline(), sig);
     }
 
     // ─── Mint: phase1 supply cap (1500) ───────────────
@@ -280,7 +302,7 @@ contract BlockPassMinterTest is Test {
             vm.prank(u);
             usdt.approve(address(minter), type(uint256).max);
             vm.prank(u);
-            minter.mint(1, _sign(u, 1));
+            minter.mint(1, _deadline(), _sign(u, 1));
         }
 
         assertEq(minter.phase1Minted(), 1500);
@@ -291,7 +313,7 @@ contract BlockPassMinterTest is Test {
         usdt.approve(address(minter), type(uint256).max);
         vm.prank(extra);
         vm.expectRevert(BlockPassMinter.PhaseSupplyReached.selector);
-        minter.mint(1, _sign(extra, 1));
+        minter.mint(1, _deadline(), _sign(extra, 1));
     }
 
     // ─── Mint: phase2 supply cap (500) ────────────────
@@ -305,7 +327,7 @@ contract BlockPassMinterTest is Test {
             vm.prank(u);
             usdt.approve(address(minter), type(uint256).max);
             vm.prank(u);
-            minter.mint(2, _sign(u, 2));
+            minter.mint(2, _deadline(), _sign(u, 2));
         }
 
         assertEq(minter.phase2Minted(), 500);
@@ -316,7 +338,7 @@ contract BlockPassMinterTest is Test {
         usdt.approve(address(minter), type(uint256).max);
         vm.prank(extra);
         vm.expectRevert(BlockPassMinter.PhaseSupplyReached.selector);
-        minter.mint(2, _sign(extra, 2));
+        minter.mint(2, _deadline(), _sign(extra, 2));
     }
 
     // ─── Helpers ─────────────────────────────────────
@@ -328,7 +350,7 @@ contract BlockPassMinterTest is Test {
             vm.prank(u);
             usdt.approve(address(minter), type(uint256).max);
             vm.prank(u);
-            minter.mint(1, _sign(u, 1));
+            minter.mint(1, _deadline(), _sign(u, 1));
         }
     }
 

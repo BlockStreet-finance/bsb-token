@@ -46,6 +46,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     error WrongPhase();
     error PhaseSupplyReached();
     error Phase1NotComplete();
+    error SignatureExpired();
 
     // ──────────────────── Events ───────────────────────
     event PhaseChanged(Phase newPhase);
@@ -73,14 +74,16 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
 
     /**
      * @notice Mint a Block Pass. Costs 5 USDT.
-     * @param _phase  Phase this signature was issued for (1=PHASE1, 2=PHASE2).
-     * @param _sig    ECDSA signature from the authorized signer.
+     * @param _phase    Phase this signature was issued for (1=PHASE1, 2=PHASE2).
+     * @param _deadline Signature expiration timestamp.
+     * @param _sig      ECDSA signature from the authorized signer.
      *
      * @dev User must approve this contract for MINT_PRICE of USDT before calling.
-     *      Signature: keccak256(abi.encodePacked(minter, _phase, chainid, address(this)))
+     *      Signature: keccak256(abi.encodePacked(minter, _phase, _deadline, chainid, address(this)))
      */
-    function mint(uint8 _phase, bytes calldata _sig) external nonReentrant {
+    function mint(uint8 _phase, uint256 _deadline, bytes calldata _sig) external nonReentrant {
         if (phase == Phase.PAUSED) revert MintPaused();
+        if (block.timestamp > _deadline) revert SignatureExpired();
         if (uint8(phase) != _phase) revert WrongPhase();
         if (hasMinted[msg.sender]) revert AlreadyMinted();
 
@@ -93,7 +96,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
 
         // Verify server signature
         bytes32 msgHash = keccak256(
-            abi.encodePacked(msg.sender, _phase, block.chainid, address(this))
+            abi.encodePacked(msg.sender, _phase, _deadline, block.chainid, address(this))
         );
         bytes32 ethSignedHash = msgHash.toEthSignedMessageHash();
         if (ethSignedHash.recover(_sig) != signer) revert InvalidSignature();

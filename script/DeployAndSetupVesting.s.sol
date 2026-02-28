@@ -10,14 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @notice Deploy vesting contract and add initial schedules
  * @dev Usage:
  *   1. Set .env file:
- *      PRIVATE_KEY=your_private_key
- *      RPC_URL=your_rpc_url
  *      BST_TOKEN_ADDRESS=0x...
  *
  *   2. Edit the schedules in setupSchedules() function below
  *
  *   3. Run:
- *      forge script script/DeployAndSetupVesting.s.sol --rpc-url $RPC_URL --broadcast
+ *      forge script script/DeployAndSetupVesting.s.sol --rpc-url $RPC_URL --broadcast --account iost
  */
 contract DeployAndSetupVesting is Script {
 
@@ -30,23 +28,20 @@ contract DeployAndSetupVesting is Script {
 
     function run() external {
         // Load config
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
         address tokenAddress = vm.envAddress("BST_TOKEN_ADDRESS");
 
         require(tokenAddress != address(0), "BST_TOKEN_ADDRESS not set");
 
         console.log("=== Deploying BSTTokenMultiVesting ===");
-        console.log("Deployer:", deployer);
         console.log("Token:", tokenAddress);
         console.log("");
 
         // Deploy
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         BSTTokenMultiVesting vesting = new BSTTokenMultiVesting(
             IERC20(tokenAddress),
-            deployer
+            msg.sender
         );
 
         console.log("Vesting Contract Deployed:", address(vesting));
@@ -100,7 +95,6 @@ contract DeployAndSetupVesting is Script {
         string memory info = string.concat(
             "BST_TOKEN_ADDRESS=", vm.toString(tokenAddress), "\n",
             "VESTING_CONTRACT=", vm.toString(address(vesting)), "\n",
-            "OWNER=", vm.toString(deployer), "\n",
             "TOTAL_ALLOCATED=", vm.toString(totalAllocation), "\n"
         );
 

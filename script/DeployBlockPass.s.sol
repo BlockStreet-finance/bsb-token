@@ -10,35 +10,30 @@ import "../src/BlockPassMinter.sol";
  * @dev Deploys both contracts and wires them together.
  *
  *   1. Set .env file:
- *      PRIVATE_KEY=your_private_key
- *      RPC_URL=your_rpc_url
  *      PASS_SIGNER=0x...        (server signing wallet address)
  *      USDT_ADDRESS=0x...       (USDT contract address)
  *      TREASURY_ADDRESS=0x...   (receives mint payments)
  *
  *   2. Run:
- *      forge script script/DeployBlockPass.s.sol --rpc-url $RPC_URL --broadcast
+ *      forge script script/DeployBlockPass.s.sol --rpc-url $RPC_URL --broadcast --account iost
  */
 contract DeployBlockPass is Script {
     string constant BASE_TOKEN_URI = "ipfs://QmYzbqtzvufCqBneBbAt1b5r9h4qeuy8R8cSEtoJ2X4HY2/";
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
         address signerAddr = vm.envAddress("PASS_SIGNER");
         address usdtAddr = vm.envAddress("USDT_ADDRESS");
         address treasuryAddr = vm.envAddress("TREASURY_ADDRESS");
         string memory baseURI = BASE_TOKEN_URI;
 
         console.log("=== Deploying BlockPass + Minter ===");
-        console.log("Deployer:", deployer);
         console.log("Signer:", signerAddr);
         console.log("USDT:", usdtAddr);
         console.log("Treasury:", treasuryAddr);
         console.log("BaseURI:", baseURI);
         console.log("");
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         // 1. Deploy NFT
         BlockPass nft = new BlockPass(baseURI);
@@ -59,14 +54,12 @@ contract DeployBlockPass is Script {
         console.log("=== Deployment Successful ===");
         console.log("BlockPass NFT:", address(nft));
         console.log("BlockPassMinter:", address(minter));
-        console.log("Owner:", deployer);
         console.log("Phase: PAUSED (call minter.setPhase to start)");
         console.log("");
 
         string memory info = string.concat(
             "BLOCK_PASS_NFT=", vm.toString(address(nft)), "\n",
             "BLOCK_PASS_MINTER=", vm.toString(address(minter)), "\n",
-            "OWNER=", vm.toString(deployer), "\n",
             "SIGNER=", vm.toString(signerAddr), "\n",
             "USDT=", vm.toString(usdtAddr), "\n",
             "TREASURY=", vm.toString(treasuryAddr), "\n"

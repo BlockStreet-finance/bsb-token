@@ -10,10 +10,9 @@ import "../src/BSBAirdrop.sol";
  * Required env vars:
  *   BST_TOKEN_ADDRESS  - BSB ERC20 token address
  *   BLOCK_PASS_ADDRESS - BlockPass NFT address
- *   PRIVATE_KEY        - Deployer private key
  *
  * Usage:
- *   forge script script/DeployBSBAirdrop.s.sol --broadcast --rpc-url $RPC_URL
+ *   forge script script/DeployBSBAirdrop.s.sol --broadcast --rpc-url $RPC_URL --account iost
  */
 contract DeployBSBAirdrop is Script {
     // ──────────── Airdrop Parameters (edit before deploy) ────────────
@@ -27,9 +26,6 @@ contract DeployBSBAirdrop is Script {
         address tokenAddr = vm.envAddress("BST_TOKEN_ADDRESS");
         address nftAddr = vm.envAddress("BLOCK_PASS_ADDRESS");
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
-
         console.log("Deploying BSBAirdrop...");
         console.log("  Token:", tokenAddr);
         console.log("  BlockPass:", nftAddr);
@@ -38,7 +34,7 @@ contract DeployBSBAirdrop is Script {
         console.log("  Cliff duration:", CLIFF_DURATION);
         console.log("  Vesting periods:", VESTING_PERIODS);
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         BSBAirdrop airdrop = new BSBAirdrop(
             IERC20(tokenAddr),
@@ -47,7 +43,7 @@ contract DeployBSBAirdrop is Script {
             INITIAL_RELEASE,
             CLIFF_DURATION,
             VESTING_PERIODS,
-            deployer
+            msg.sender
         );
 
         vm.stopBroadcast();
