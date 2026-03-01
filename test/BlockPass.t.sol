@@ -230,9 +230,9 @@ contract BlockPassMinterTest is Test {
 
     // ─── Mint: phase2 ───────────────────────────────
     function test_mint_phase2() public {
-        // Must complete phase1 first
+        // Phase1 auto-transitions to Phase2 after filling
         _fillPhase1();
-        minter.setPhase(BlockPassMinter.Phase.PHASE2);
+        assertEq(uint8(minter.phase()), uint8(BlockPassMinter.Phase.PHASE2));
 
         vm.prank(user2);
         minter.mint(2, _deadline(), _sign(user2, 2));
@@ -250,8 +250,7 @@ contract BlockPassMinterTest is Test {
 
     // ─── Mint: wrong phase ────────────────────────────
     function test_mint_revert_wrong_phase() public {
-        _fillPhase1();
-        minter.setPhase(BlockPassMinter.Phase.PHASE2);
+        _fillPhase1(); // auto-transitions to Phase2
 
         vm.prank(user1);
         vm.expectRevert(BlockPassMinter.WrongPhase.selector);
@@ -303,8 +302,8 @@ contract BlockPassMinterTest is Test {
         minter.mint(1, _deadline(), sig);
     }
 
-    // ─── Mint: phase1 supply cap (1500) ───────────────
-    function test_mint_revert_phase1_supply() public {
+    // ─── Mint: phase1 auto-transitions to phase2 ──────
+    function test_mint_phase1_auto_phase2() public {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
 
         for (uint256 i = 1; i <= 1500; i++) {
@@ -317,20 +316,22 @@ contract BlockPassMinterTest is Test {
         }
 
         assertEq(minter.phase1Minted(), 1500);
+        // Auto-transitioned to Phase2
+        assertEq(uint8(minter.phase()), uint8(BlockPassMinter.Phase.PHASE2));
 
+        // Phase1 signature no longer works
         address extra = address(0xDEAD);
         usdt.mint(extra, 5 * 10 ** 6);
         vm.prank(extra);
         usdt.approve(address(minter), type(uint256).max);
         vm.prank(extra);
-        vm.expectRevert(BlockPassMinter.PhaseSupplyReached.selector);
+        vm.expectRevert(BlockPassMinter.WrongPhase.selector);
         minter.mint(1, _deadline(), _sign(extra, 1));
     }
 
     // ─── Mint: phase2 supply cap (500) ────────────────
     function test_mint_revert_phase2_supply() public {
-        _fillPhase1();
-        minter.setPhase(BlockPassMinter.Phase.PHASE2);
+        _fillPhase1(); // auto-transitions to Phase2
 
         for (uint256 i = 1; i <= 500; i++) {
             address u = address(uint160(0x20000 + i));
@@ -370,8 +371,8 @@ contract BlockPassMinterTest is Test {
         minter.setPhase(BlockPassMinter.Phase.PHASE1);
         assertEq(uint8(minter.phase()), 1);
 
+        // After filling phase1, auto-transitions to Phase2
         _fillPhase1();
-        minter.setPhase(BlockPassMinter.Phase.PHASE2);
         assertEq(uint8(minter.phase()), 2);
 
         minter.setPhase(BlockPassMinter.Phase.PAUSED);

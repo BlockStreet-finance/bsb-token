@@ -106,6 +106,10 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
         hasMinted[msg.sender] = true;
         if (phase == Phase.PHASE1) {
             phase1Minted++;
+            if (phase1Minted == PHASE1_SUPPLY) {
+                phase = Phase.PHASE2;
+                emit PhaseChanged(Phase.PHASE2);
+            }
         } else {
             phase2Minted++;
         }
