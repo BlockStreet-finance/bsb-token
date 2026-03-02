@@ -5,22 +5,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./BlockPass.sol";
 
 /**
  * @title BlockPass Minter
- * @dev Handles mint logic: signature verification, USDT payment, phase control.
+ * @dev Handles mint logic: signature verification, native token payment, phase control.
  *      Calls BlockPass.mint() to issue tokens.
  */
 contract BlockPassMinter is Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
-    using SafeERC20 for IERC20;
 
     // ──────────────────── Constants ────────────────────
-    uint256 public constant MINT_PRICE = 5 * 10 ** 6; // 5 USDT (6 decimals)
+    uint256 public constant MINT_PRICE = 0.00111 ether;
     uint256 public constant PHASE1_SUPPLY = 1500;
     uint256 public constant PHASE2_SUPPLY = 500;
 
@@ -29,7 +26,6 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
 
     // ──────────────────── State ────────────────────────
     BlockPass public immutable nft;
-    IERC20    public immutable usdt;
     address   public signer;     // server-side signing wallet
     address   public treasury;   // receives mint payments
     Phase     public phase;
@@ -47,6 +43,8 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     error PhaseSupplyReached();
     error Phase1NotComplete();
     error SignatureExpired();
+    error WrongPayment();
+    error TransferFailed();
 
     // ──────────────────── Events ───────────────────────
     event PhaseChanged(Phase newPhase);
@@ -58,14 +56,12 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     constructor(
         address _nft,
         address _signer,
-        address _usdt,
         address _treasury
     ) Ownable(msg.sender) {
-        if (_nft == address(0) || _signer == address(0) || _usdt == address(0) || _treasury == address(0))
+        if (_nft == address(0) || _signer == address(0) || _treasury == address(0))
             revert ZeroAddress();
         nft = BlockPass(_nft);
         signer = _signer;
-        usdt = IERC20(_usdt);
         treasury = _treasury;
         phase = Phase.PAUSED;
     }
@@ -73,15 +69,15 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
     // ──────────────────── Mint ─────────────────────────
 
     /**
-     * @notice Mint a Block Pass. Costs 5 USDT.
+     * @notice Mint a Block Pass. Costs 0.00111 native token.
      * @param _phase    Phase this signature was issued for (1=PHASE1, 2=PHASE2).
      * @param _deadline Signature expiration timestamp.
      * @param _sig      ECDSA signature from the authorized signer.
      *
-     * @dev User must approve this contract for MINT_PRICE of USDT before calling.
-     *      Signature: keccak256(abi.encodePacked(minter, _phase, _deadline, chainid, address(this)))
+     * @dev Signature: keccak256(abi.encodePacked(minter, _phase, _deadline, chainid, address(this)))
      */
-    function mint(uint8 _phase, uint256 _deadline, bytes calldata _sig) external nonReentrant {
+    function mint(uint8 _phase, uint256 _deadline, bytes calldata _sig) external payable nonReentrant {
+        if (msg.value != MINT_PRICE) revert WrongPayment();
         if (phase == Phase.PAUSED) revert MintPaused();
         if (block.timestamp > _deadline) revert SignatureExpired();
         if (_deadline > block.timestamp + 5 minutes) revert SignatureExpired();
@@ -115,7 +111,8 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
         }
 
         // Interactions: external calls last
-        usdt.safeTransferFrom(msg.sender, treasury, MINT_PRICE);
+        (bool success, ) = treasury.call{value: msg.value}("");
+        if (!success) revert TransferFailed();
         uint256 tokenId = nft.mint(msg.sender);
 
         emit Minted(msg.sender, tokenId);

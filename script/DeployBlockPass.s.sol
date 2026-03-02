@@ -11,18 +11,17 @@ import "../src/BlockPassMinter.sol";
  *
  * Usage:
  *   forge script script/DeployBlockPass.s.sol \
- *     --sig "run(address,address,address)" <SIGNER> <USDT> <TREASURY> \
+ *     --sig "run(address,address)" <SIGNER> <TREASURY> \
  *     --rpc-url $RPC_URL --broadcast --account iost
  */
 contract DeployBlockPass is Script {
     string constant BASE_TOKEN_URI = "ipfs://QmYzbqtzvufCqBneBbAt1b5r9h4qeuy8R8cSEtoJ2X4HY2/";
 
-    function run(address signerAddr, address usdtAddr, address treasuryAddr) external {
+    function run(address signerAddr, address treasuryAddr) external {
         string memory baseURI = BASE_TOKEN_URI;
 
         console.log("=== Deploying BlockPass + Minter ===");
         console.log("Signer:", signerAddr);
-        console.log("USDT:", usdtAddr);
         console.log("Treasury:", treasuryAddr);
         console.log("BaseURI:", baseURI);
         console.log("");
@@ -36,7 +35,6 @@ contract DeployBlockPass is Script {
         BlockPassMinter minter = new BlockPassMinter(
             address(nft),
             signerAddr,
-            usdtAddr,
             treasuryAddr
         );
 
