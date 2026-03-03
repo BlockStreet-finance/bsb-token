@@ -6,7 +6,6 @@ import "../src/BSBAirdrop.sol";
 
 /**
  * @dev Deploy BSBAirdrop contract.
- * 用于 NFT Airdrop 
  * Usage:
  *   forge script script/DeployBSBAirdrop.s.sol \
  *     --sig "run(address,address)" <BSB_TOKEN> <BLOCK_PASS_NFT> \
@@ -15,8 +14,8 @@ import "../src/BSBAirdrop.sol";
 
 contract DeployBSBAirdrop is Script {
     // ──────────── Airdrop Parameters (edit before deploy) ────────────
-    uint256 constant AMOUNT_PER_NFT   = 25_000 * 10**18;  // 10,000 BSB per NFT
-    uint256 constant INITIAL_RELEASE  = 1_250 * 10**18;    // 1,250 BSB immediately (12.5%)
+    uint256 constant AMOUNT_PER_NFT   = 2_500 * 10**18;  
+    uint256 constant INITIAL_RELEASE  = 125 * 10**18;    
     uint256 constant CLIFF_DURATION   = 12 * 30 days;          // 12 months
     uint256 constant VESTING_PERIODS  = 24;                // 12 months after cliff
     // ─────────────────────────────────────────────────────────────────
