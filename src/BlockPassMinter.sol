@@ -77,7 +77,7 @@ contract BlockPassMinter is Ownable, ReentrancyGuard {
      * @dev Signature: keccak256(abi.encodePacked(minter, _phase, _deadline, chainid, address(this)))
      */
     function mint(uint8 _phase, uint256 _deadline, bytes calldata _sig) external payable nonReentrant {
-        if (msg.value != MINT_PRICE) revert WrongPayment();
+        if (msg.value < MINT_PRICE) revert WrongPayment();
         if (phase == Phase.PAUSED) revert MintPaused();
         if (block.timestamp > _deadline) revert SignatureExpired();
         if (_deadline > block.timestamp + 5 minutes) revert SignatureExpired();

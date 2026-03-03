@@ -6,12 +6,13 @@ import "../src/BSBAirdrop.sol";
 
 /**
  * @dev Deploy BSBAirdrop contract.
- *
+ * 用于 NFT Airdrop 
  * Usage:
  *   forge script script/DeployBSBAirdrop.s.sol \
  *     --sig "run(address,address)" <BSB_TOKEN> <BLOCK_PASS_NFT> \
  *     --broadcast --rpc-url $RPC_URL --account iost
  */
+
 contract DeployBSBAirdrop is Script {
     // ──────────── Airdrop Parameters (edit before deploy) ────────────
     uint256 constant AMOUNT_PER_NFT   = 25_000 * 10**18;  // 10,000 BSB per NFT
